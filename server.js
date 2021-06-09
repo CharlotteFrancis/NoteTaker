@@ -5,7 +5,7 @@ const uid = require('uid')
 const app = express()
 
 let notes = require('./db/db.json')
-const { dirname } = require('path')
+// const { dirname } = require('path')
 
 app.use(express.static(path.join(__dirname, 'public')))
 app.use(express.urlencoded({ extended: true }))
@@ -21,26 +21,44 @@ app.get('/notes', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'notes.html'))
 })
 
-// app.post for adding onto notes, check line 15 from server.js in 06-day-01
+// *** potentially make this save to db.json yeah.
+// app.post for adding onto notes,
 app.post('/api/notes', (req, res) => {
   const note = {
     id: uid.uid(),
     ...req.body
   }
   notes.push(note)
+
+  // write file to add to db.json
+  fs.writeFile(path.join(__dirname, 'db', 'db.json'), JSON.stringify(notes), err => {
+    if (err) {
+      console.log(err)
+    }
+    console.log('file written')
+  })
+
   res.json(notes)
 })
 
 // delete with ID?
 app.delete('/api/notes/:id', (req, res) => {
-  notes = notes.filter(note => {
+  notes = notes.filter(note =>
     note.id !== req.params.id
+  )
+
+  // write file to db.json
+  fs.writeFile(path.join(__dirname, 'db', 'db.json'), JSON.stringify(notes), err => {
+    if (err) {
+      console.log(err)
+    }
+    console.log('file written')
   })
+
+  res.json(notes)
 })
 
-// app.delete based on uid(?)
-
-// listen on port 3k or defauly heroku port
+// listen on port 3k or default heroku port
 app.listen(process.env.PORT || 3000, _ => {
   console.log('server running')
 })
